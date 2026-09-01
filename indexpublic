@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Transcript Tool</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background: #f4f6f9; padding: 20px; display: flex; justify-content: center; }
+        .card { background: #fff; padding: 20px; border-radius: 12px; width: 100%; max-width: 450px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h3 { color: #1a73e8; text-align: center; margin-bottom: 15px; }
+        label { font-weight: bold; font-size: 14px; color: #333; display: block; margin-top: 12px; margin-bottom: 5px; }
+        input[type="file"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        .btn { width: 100%; background: #1a73e8; color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 12px; }
+        .btn-copy { background: #34a853; }
+        .progress-box { width: 100%; background: #e0e0e0; border-radius: 10px; margin-top: 12px; display: none; overflow: hidden; position: relative; height: 22px; }
+        .progress-bar { width: 0%; height: 100%; background: #1a73e8; transition: width 0.3s; }
+        .progress-text { position: absolute; width: 100%; text-align: center; font-size: 12px; font-weight: bold; color: #000; top: 3px; }
+        textarea { height: 130px; resize: none; margin-top: 5px; }
+        audio { display: none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h3>📹 Video Transcript Tool</h3>
+
+        <label>Video Upload</label>
+        <input type="file" id="mediaInput" accept="video/*,audio/*">
+        <audio id="audioPlayer"></audio>
+
+        <label>ဘာသာရွေး</label>
+        <select id="languageSelect">
+            <option value="my-MM">Myanmar (မြန်မာ)</option>
+            <option value="en-US">English (အင်္ဂလိပ်)</option>
+            <option value="ko-KR">Korea (ကိုရီးယား)</option>
+            <option value="th-TH">Thailand (ထိုင်း)</option>
+            <option value="ja-JP">Japan (ဂျပန်)</option>
+        </select>
+
+        <button class="btn" onclick="startProcess()">စတင်မည်</button>
+
+        <div class="progress-box" id="progressBox">
+            <div class="progress-bar" id="progressBar"></div>
+            <div class="progress-text" id="progressText">0%</div>
+        </div>
+
+        <label>Video ထဲက စာတမ်း</label>
+        <textarea id="resultText" placeholder="ဒီမှာ စာတမ်း ထွက်လာပါမည်..."></textarea>
+
+        <button class="btn btn-copy" onclick="copyText()">Copy ကူးမည်</button>
+    </div>
+
+    <script>
+        let recognition;
+        function startProcess() {
+            const fileInput = document.getElementById('mediaInput');
+            const selectedLang = document.getElementById('languageSelect').value;
+            const resultText = document.getElementById('resultText');
+            const audioPlayer = document.getElementById('audioPlayer');
+            const progressBox = document.getElementById('progressBox');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+
+            if (!fileInput.files[0]) {
+                alert("Video သို့မဟုတ် Audio ဖိုင် ရွေးပေးပါ");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            audioPlayer.src = URL.createObjectURL(file);
+            audioPlayer.play();
+
+            progressBox.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressText.innerText = '0%';
+            resultText.value = "စာပြောင်းနေပါသည်။ ခေတ္တစောင့်ပါ...";
+
+            audioPlayer.ontimeupdate = () => {
+                if (audioPlayer.duration) {
+                    let percent = Math.floor((audioPlayer.currentTime / audioPlayer.duration) * 100);
+                    progressBar.style.width = percent + '%';
+                    progressText.innerText = percent + '%';
+                }
+            };
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Chrome Browser သုံးပေးပါ");
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.lang = selectedLang;
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            let finalTranscript = '';
+            recognition.onresult = (event) => {
+                finalTranscript = '';
+                for (let i = 0; i < event.results.length; i++) {
+                    finalTranscript += event.results[i][0].transcript + ' ';
+                }
+                resultText.value = finalTranscript;
+            };
+
+            audioPlayer.onended = () => {
+                progressBar.style.width = '100%';
+                progressText.innerText = '100% ပြီးပါပြီ!';
+                recognition.stop();
+            };
+
+            recognition.start();
+        }
+
+        function copyText() {
+            const resultText = document.getElementById('resultText');
+            if(!resultText.value) return;
+            resultText.select();
+            navigator.clipboard.writeText(resultText.value);
+            alert("Copy ကူးပြီးပါပြီ!");
+        }
+    </script>
+</body>
+</html>
