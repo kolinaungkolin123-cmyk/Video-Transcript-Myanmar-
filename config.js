@@ -1,1 +1,1 @@
-window.CFG={API:"https://moreover-shopzilla-order-quilt.trycloudflare.com"};
+window.CFG={API:"https://grand-racing-promoted-emphasis.trycloudflare.com"};
