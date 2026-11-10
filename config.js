@@ -1,1 +1,1 @@
-window.CFG={API:"https://xxxx.trycloudflare.com"};
+window.CFG={API:"https://certificate-gardening-avatar-attempting.trycloudflare.com"};
