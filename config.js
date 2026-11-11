@@ -1,1 +1,1 @@
-window.CFG={API:"https://gospel-dvd-objectives-fabulous.trycloudflare.com"};
+window.CFG={API:"https://charlotte-mobiles-geography-examinations.trycloudflare.com"};
