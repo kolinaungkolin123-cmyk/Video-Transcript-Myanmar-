@@ -1,1 +1,1 @@
-window.CFG={API:"https://ministers-crew-behaviour-you.trycloudflare.com"};
+window.CFG={API:"https://inexpensive-mile-temporal-teach.trycloudflare.com"};
