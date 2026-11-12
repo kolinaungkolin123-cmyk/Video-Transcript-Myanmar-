@@ -14,6 +14,8 @@ main{max-width:640px;margin:0 auto;padding:16px}
 .brand{font-weight:800;font-size:1.15rem;display:flex;align-items:center;gap:8px;flex:1}
 .brand i{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:#0b0b0f;color:#fff;font-style:normal}
 .net{font-size:.8rem;font-weight:700;white-space:nowrap}
+#nb{position:fixed;left:0;right:0;top:58px;z-index:60;padding:8px 12px;text-align:center;font-weight:700;color:#fff;display:none}
+#nb.dn{background:#d93025}#nb.up{background:#12a150}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:16px;margin-bottom:14px}
 .card h2{font-size:1rem;margin:0 0 8px}
 input,select{width:100%;padding:11px;border-radius:12px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit;margin-bottom:8px}
@@ -36,7 +38,9 @@ label{font-size:.85rem;color:var(--mut)}
 .tabs button{margin:0;background:transparent;color:var(--mut);padding:9px 4px;font-size:.92rem}
 .tabs button.on{background:var(--card);color:var(--pri);box-shadow:0 1px 4px rgba(0,0,0,.15)}
 #lg{position:fixed;inset:0;z-index:50;background:var(--bg);display:none;overflow:auto}#lg.on{display:block}
+.dt{background:var(--soft);border-radius:14px;padding:8px 12px;margin-top:8px}
 </style></head><body>
+<div id="nb"></div>
 <div id="lg"><main><h1>🎬 OnexClip</h1><div class="card">
 <div class="tabs"><button class="on" id="lt0">အကောင့်ဖွင့်</button><button id="lt1">ပြန်ဝင်</button></div>
 <label>User ID (ဂဏန်း ၆ လုံးနှင့်အထက် – ကိုယ်တိုင်ရွေးပါ)</label>
@@ -60,7 +64,7 @@ label{font-size:.85rem;color:var(--mut)}
 <button id="asave">Save</button><div id="amsg" style="margin-top:6px"></div></div>
 <button class="sec" id="out">ထွက်မည်</button></div>
 
-<div class="pg" id="pg-recap"><div id="recap"></div></div>
+<div class="pg" id="pg-recap"><div id="aj" class="card" style="display:none"></div><div id="recap"></div></div>
 
 <div class="pg" id="pg-history"><div class="tabs"><button class="on" id="ht0">🎬 Video</button><button id="ht1">🧾 ဝယ်ယူမှု</button></div>
 <div class="card" id="hv"></div><div class="card" id="ho" style="display:none"></div></div>
@@ -82,14 +86,44 @@ label{font-size:.85rem;color:var(--mut)}
 </main>
 <script src="recap.js"></script>
 <script>
-const A=((window.CFG||{}).API||"").replace(/\/$/,""),$=i=>document.getElementById(i),esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
-let tok=localStorage.ox_tok||"",ME=null,PG="account",recapInit=false,ht=0,reg=true;
+const $=i=>document.getElementById(i),esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+let A=((window.CFG||{}).API||"").replace(/\/$/,"");
+const FETCH0=window.fetch.bind(window),REPO="kolinaungkolin123-cmyk/Video-Transcript-Myanmar-";
+let tok=localStorage.ox_tok||"",ME=null,PG="account",recapInit=false,ht=0,reg=true,SESS=false,down=false,nbT=0,ajT=0,openId=null;
+
+function nb(t,c,ms){const e=$("nb");e.textContent=t;e.className=c;e.style.display="block";clearTimeout(nbT);if(ms)nbT=setTimeout(()=>e.style.display="none",ms);else{}}
+async function refreshApi(){
+  try{const r=await FETCH0("https://api.github.com/repos/"+REPO+"/contents/url.txt?ref=main&t="+Date.now(),{headers:{Accept:"application/vnd.github.raw+json"}});
+    if(r.ok){const t=(await r.text()).trim();
+      if(/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(t)&&t!==A){A=t;if(window.OX)OX.API=t;try{localStorage.ox_api=t}catch(e){}}}}catch(e){}}
+
+/* လိုင်းပြတ်ရင် ပြန်ချိတ်ပြီး ဆက်လုပ် */
+window.fetch=async function(u,o){
+  if(typeof u!=="string")return FETCH0(u,o);
+  let url=u,base=A;const m=((o&&o.method)||"GET").toUpperCase(),onApi=A&&url.indexOf(A)==0;
+  const retry=onApi&&m=="GET"&&/\/api\/(job|history|trim|dl)/.test(url);
+  if(onApi&&m=="POST"&&/\/api\/(transcribe|continue)$/.test(url)){SESS=true;try{const id=JSON.parse(o.body).id;if(id)localStorage.ox_job=id}catch(e){}}
+  for(let n=0;;n++){
+    try{
+      const r=await FETCH0(url,o);
+      if(down){down=false;nb("✅ ပြန်ချိတ်မိပါပြီ – အလုပ်ဆက်လုပ်နေသည်","up",2500)}
+      const mm=url.match(/\/api\/job\/([a-z0-9]+)/);
+      if(mm&&localStorage.ox_job==mm[1])r.clone().json().then(j=>{if(j.status=="done"||j.status=="error")localStorage.removeItem("ox_job")}).catch(()=>{});
+      return r}
+    catch(e){
+      if(!retry||n>=600)throw e;
+      if(!down){down=true;nb("🔴 ချိတ်ဆက်မှု ပြတ်နေသည် – ပြန်ချိတ်နေသည်... (Video ထုတ်တာ Termux မှာ ဆက်လုပ်နေပါတယ်)","dn")}
+      await new Promise(r=>setTimeout(r,3000));
+      if(n%3==2){await refreshApi();if(A!==base){url=url.replace(base,A);base=A}}
+    }}};
+
 const F=async(p,o)=>{o=o||{};o.headers=Object.assign({"X-Token":tok},o.headers||{});const r=await fetch(A+p,o);if(r.status==401&&tok){tok="";localStorage.removeItem("ox_tok");$("lg").classList.add("on")}return r};
 const P=(p,b)=>F(p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});
 window.OX={API:A,f:F,post:P,esc,u:p=>A+p+(p.includes("?")?"&":"?")+"k="+tok,me:()=>ME,refresh:()=>loadMe(),go:p=>show(p)};
-async function ping(){try{const c=new AbortController();setTimeout(()=>c.abort(),4000);await fetch(A+"/",{signal:c.signal});$("net").className="net ok";$("net").textContent="🟢 Online"}catch(e){$("net").className="net er";$("net").textContent="🔴 Network Error"}}
+async function ping(){try{const c=new AbortController();setTimeout(()=>c.abort(),4000);await fetch(A+"/",{signal:c.signal});$("net").className="net ok";$("net").textContent="🟢 Online"}catch(e){$("net").className="net er";$("net").textContent="🔴 Network Error";refreshApi()}}
 ping();setInterval(ping,5000);
 
+/* login */
 function lmode(r){reg=r;$("lt0").classList.toggle("on",r);$("lt1").classList.toggle("on",!r);$("lr").style.display=r?"none":"block";$("lgo").textContent=r?"အကောင့်ဖွင့်မည်":"ပြန်ဝင်မည်";$("lm").textContent=""}
 $("lt0").onclick=()=>lmode(true);$("lt1").onclick=()=>lmode(false);
 $("lgo").onclick=async()=>{
@@ -104,12 +138,13 @@ $("lgo").onclick=async()=>{
   $("lgo").disabled=false};
 $("out").onclick=()=>{tok="";localStorage.removeItem("ox_tok");location.reload()};
 
+/* menu */
 $("mb").onclick=()=>$("dr").classList.add("on");
 $("dr").onclick=e=>{const a=e.target.closest("a");if(a)show(a.dataset.p);else if(e.target.id=="dr")$("dr").classList.remove("on")};
 function show(p){PG=p;$("dr").classList.remove("on");
   document.querySelectorAll(".pg").forEach(x=>x.classList.toggle("on",x.id=="pg-"+p));
   document.querySelectorAll("#dr a").forEach(x=>x.classList.toggle("on",x.dataset.p==p));
-  if(p=="account")loadMe();if(p=="history")loadHist();
+  if(p=="account")loadMe();if(p=="history")loadHist();if(p=="recap")aj();
   if(p=="recap"&&!recapInit){if(window.Recap){recapInit=true;Recap.init($("recap"))}else $("recap").innerHTML='<div class="card er">recap.js မတင်ရသေးပါ</div>'}}
 async function loadMe(){try{const r=await F("/api/me");if(!r.ok)return;ME=await r.json();
   $("aid").textContent=ME.id;$("afree").textContent=ME.free;$("avid").textContent=ME.vids;$("amax").textContent=ME.max;$("arec").textContent=ME.rec;$("puid").value=ME.id;
@@ -118,22 +153,58 @@ $("asave").onclick=async()=>{const k=$("akey").value.trim();if(!k){$("amsg").cla
   try{const r=await P("/api/me/key",{key:k});$("amsg").className=r.ok?"ok":"er";$("amsg").textContent=r.ok?"✅ Save ပြီးပါပြီ":"❌ မအောင်မြင်ပါ";if(r.ok){$("akey").value="";loadMe()}}
   catch(e){$("amsg").className="er";$("amsg").textContent="❌ Network Error"}};
 
+/* progress helpers */
+const WT=[5,20,5,25,25,20],IC={ok:"✅",run:"⏳",err:"❌",wait:"⚪",pause:"✋"};
+function pct(s){if(s.s=="ok")return 100;if(s.s!="run")return 0;const m=s.m||"",a=m.match(/(\d+)\s*%/),b=m.match(/(\d+)\s*\/\s*(\d+)/);
+  if(a)return Math.min(100,+a[1]);if(b&&+b[2])return Math.min(100,Math.round(b[1]*100/b[2]));return 0}
+function pc(st){if(!st||st.length!=6)return 0;let t=0;st.forEach((s,i)=>t+=WT[i]*pct(s)/100);return Math.round(t)}
+const bar=p=>'<div class="pb2"><i style="width:'+p+'%"></i></div>';
+function stepsHtml(st){return (st||[]).map(s=>{const p=pct(s);return '<div style="padding:5px 0;border-bottom:1px solid var(--bd)">'+(IC[s.s]||"⚪")+" "+esc(s.n)+(s.s=="run"&&p?" — <b>"+p+"%</b>":"")+
+  (s.m?'<small class="'+(s.s=="err"?"er":"wn")+'" style="display:block">'+esc(s.m)+"</small>":"")+"</div>"}).join("")}
+
+/* ထုတ်နေတဲ့ video (page ပြန်ဖွင့်ရင် ဆက်ပြ) */
+async function aj(){
+  clearTimeout(ajT);ajT=setTimeout(aj,4000);
+  const id=localStorage.ox_job,box=$("aj");
+  if(!id||SESS||PG!="recap"||!tok){box.style.display="none";return}
+  try{
+    const r=await F("/api/job/"+id);if(!r.ok){box.style.display="none";return}
+    const j=await r.json();let h="";
+    if(j.status=="running")h='<h2>⏳ ထုတ်နေတဲ့ video ရှိပါတယ် – '+pc(j.steps)+'%</h2>'+bar(pc(j.steps))+stepsHtml(j.steps);
+    else if(j.status=="wait")h='<h2>✋ ဘာသာပြန်စာ ထည့်ရမယ့် အဆင့်မှာ ရပ်ထားသည်</h2><div class="wn">ဒီအဆင့်ကို page ပြန်ဖွင့်ရင် ပြန်မပြနိုင်ပါ။ အောက်က Recap မှာ ပြန်စပါ (credit မကုန်သေးပါ)</div>';
+    else if(j.status=="done")h='<h2>✅ Video ပြီးပါပြီ</h2><button id="ajh">📜 History မှာ ကြည့်မည်</button>';
+    else if(j.steps&&j.steps.length)h='<h2 class="er">❌ မအောင်မြင်ပါ</h2><div class="er">'+esc(j.error||"")+"</div>"+stepsHtml(j.steps);
+    else{box.style.display="none";localStorage.removeItem("ox_job");return}
+    box.innerHTML=h;box.style.display="block";const b=$("ajh");if(b)b.onclick=()=>show("history")
+  }catch(e){}}
+
+/* history */
 const T=t=>new Date(t*1000).toLocaleString();
 $("ht0").onclick=()=>{ht=0;$("ht0").classList.add("on");$("ht1").classList.remove("on");$("hv").style.display="block";$("ho").style.display="none";loadHist()};
 $("ht1").onclick=()=>{ht=1;$("ht1").classList.add("on");$("ht0").classList.remove("on");$("hv").style.display="none";$("ho").style.display="block";loadHist()};
-let openId=null;
+async function detail(id){
+  const el=$("d_"+id);if(!el)return;
+  try{const j=await (await F("/api/history/"+id)).json();
+    let h=(j.st=="run"?bar(j.p):"")+stepsHtml(j.steps);
+    if(j.error)h+='<div class="er" style="margin-top:6px">❌ '+esc(j.error)+"</div>";
+    if(!(j.steps||[]).length&&!j.error)h+='<div class="wn">အသေးစိတ် မရှိပါ</div>';
+    if(j.ok)h+='<video controls autoplay src="'+OX.u("/api/video/"+id)+'"></video>';
+    el.innerHTML='<div class="dt">'+h+"</div>"}catch(e){el.innerHTML='<div class="er">Network Error</div>'}}
 async function loadHist(){
   try{
     if(ht==0){const j=await (await F("/api/history")).json();
       $("hv").innerHTML=j.items.length?j.items.map(h=>'<div class="it"><div>'+T(h.t)+' · '+(h.st=="done"?'<span class="ok">✅ ပြီး</span>':h.st=="run"?'<span class="wn">⏳ '+h.p+'%</span>':'<span class="er">❌ မအောင်မြင်</span>')+'</div>'+
-        (h.st=="run"?'<div class="pb2"><i style="width:'+h.p+'%"></i></div>':"")+
-        (h.ok?'<div class="row" style="margin-top:6px"><button class="sec" data-v="'+h.id+'">▶ ကြည့်</button><a class="btn" style="margin:0" href="'+OX.u("/api/video/"+h.id+"?dl=1")+'">⬇ ဒေါင်း</a></div>'+(openId==h.id?'<video controls autoplay src="'+OX.u("/api/video/"+h.id)+'"></video>':""):"")+'</div>').join(""):'<div class="wn">Video မရှိသေးပါ</div>';
-      $("hv").querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{openId=openId==b.dataset.v?null:b.dataset.v;loadHist()});
-      if(PG=="history"&&ht==0&&!openId&&j.items.some(h=>h.st=="run"))setTimeout(()=>{if(PG=="history"&&ht==0&&!openId)loadHist()},3000)}
+        (h.st=="run"?bar(h.p):"")+
+        '<div class="row" style="margin-top:6px"><button class="sec" data-d="'+h.id+'">ℹ ကြည့်</button>'+(h.ok?'<a class="btn" style="margin:0" href="'+OX.u("/api/video/"+h.id+"?dl=1")+'">⬇ ဒေါင်း</a>':"")+'</div><div id="d_'+h.id+'"></div></div>').join(""):'<div class="wn">Video မရှိသေးပါ</div>';
+      $("hv").querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{openId=openId==b.dataset.d?null:b.dataset.d;loadHist()});
+      if(openId)detail(openId);
+      const vid=openId&&j.items.some(x=>x.id==openId&&x.ok);
+      if(PG=="history"&&ht==0&&!vid&&j.items.some(x=>x.st=="run"))setTimeout(()=>{if(PG=="history"&&ht==0)loadHist()},3000)}
     else{const j=await (await F("/api/orders")).json();
       $("ho").innerHTML=j.items.length?j.items.map(o=>'<div class="it">'+T(o.t)+'<br>Video <b>'+o.n+'</b> ပုဒ် · '+esc(o.pay)+' · '+(o.st=="done"?'<span class="ok">✅ ထည့်ပေးပြီး</span>':'<span class="wn">⏳ စစ်ဆေးနေသည်</span>')+'</div>').join(""):'<div class="wn">ဝယ်ယူမှု မရှိသေးပါ</div>'}
   }catch(e){}}
 
+/* package */
 const PK=[[15,10000],[30,19000],[50,28000]];
 $("pks").innerHTML=PK.map((p,i)=>'<div class="pk"><b>'+p[0]+' Video</b><div class="pr">'+p[1].toLocaleString()+' ကျပ်</div><div>15Min Limit</div><button data-i="'+i+'">ဝယ်မည်</button></div>').join("");
 $("pks").onclick=e=>{const b=e.target.closest("button");if(!b)return;$("pn").value=PK[b.dataset.i][0];$("pf").style.display="block";$("pm").textContent="";$("pf").scrollIntoView()};
@@ -150,5 +221,5 @@ $("pbuy").onclick=async()=>{
     else m.textContent="❌ "+(j.error||"မအောင်မြင်ပါ")}catch(e){m.textContent="❌ Network Error"}
   $("pbuy").disabled=false};
 
-(async()=>{if(!tok){$("lg").classList.add("on");return}await loadMe();if(ME)show("account")})();
+(async()=>{if(!tok){$("lg").classList.add("on");return}await loadMe();if(ME)show("account");aj()})();
 </script></body></html>
