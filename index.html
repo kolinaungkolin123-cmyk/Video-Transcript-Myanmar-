@@ -88,39 +88,43 @@ label{font-size:.85rem;color:var(--mut)}
 <script>
 const $=i=>document.getElementById(i),esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
 let A=((window.CFG||{}).API||"").replace(/\/$/,"");
-const FETCH0=window.fetch.bind(window),REPO="kolinaungkolin123-cmyk/Video-Transcript-Myanmar-";
-let tok=localStorage.ox_tok||"",ME=null,PG="account",recapInit=false,ht=0,reg=true,SESS=false,down=false,nbT=0,ajT=0,openId=null;
+const FETCH0=window.fetch.bind(window),GHP=/github\.io$/.test(location.hostname);
+let tok=localStorage.ox_tok||"",ME=null,PG="account",recapInit=false,ht=0,reg=true,SESS=false,down=false,offl=false,nbT=0,ajT=0,openId=null;
 
-function nb(t,c,ms){const e=$("nb");e.textContent=t;e.className=c;e.style.display="block";clearTimeout(nbT);if(ms)nbT=setTimeout(()=>e.style.display="none",ms);else{}}
-async function refreshApi(){
-  try{const r=await FETCH0("https://api.github.com/repos/"+REPO+"/contents/url.txt?ref=main&t="+Date.now(),{headers:{Accept:"application/vnd.github.raw+json"}});
-    if(r.ok){const t=(await r.text()).trim();
-      if(/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(t)&&t!==A){A=t;if(window.OX)OX.API=t;try{localStorage.ox_api=t}catch(e){}}}}catch(e){}}
+function nb(t,c,ms){const e=$("nb");e.textContent=t;e.className=c;e.style.display="block";clearTimeout(nbT);if(ms)nbT=setTimeout(()=>e.style.display="none",ms)}
 
-/* လိုင်းပြတ်ရင် ပြန်ချိတ်ပြီး ဆက်လုပ် */
+/* လိုင်းပြတ်ရင် သတိပေးပြီး၊ ပြန်ရရင် ရပ်သွားတဲ့နေရာကနေ ဆက်လုပ် */
 window.fetch=async function(u,o){
   if(typeof u!=="string")return FETCH0(u,o);
-  let url=u,base=A;const m=((o&&o.method)||"GET").toUpperCase(),onApi=A&&url.indexOf(A)==0;
-  const retry=onApi&&m=="GET"&&/\/api\/(job|history|trim|dl)/.test(url);
-  if(onApi&&m=="POST"&&/\/api\/(transcribe|continue)$/.test(url)){SESS=true;try{const id=JSON.parse(o.body).id;if(id)localStorage.ox_job=id}catch(e){}}
+  const m=((o&&o.method)||"GET").toUpperCase(),onApi=A&&u.indexOf(A)==0;
+  const retry=onApi&&m=="GET"&&/\/api\/(job|history|trim|dl)/.test(u);
+  if(onApi&&m=="POST"&&/\/api\/(transcribe|continue)$/.test(u)){SESS=true;try{const id=JSON.parse(o.body).id;if(id)localStorage.ox_job=id}catch(e){}}
   for(let n=0;;n++){
     try{
-      const r=await FETCH0(url,o);
-      if(down){down=false;nb("✅ ပြန်ချိတ်မိပါပြီ – အလုပ်ဆက်လုပ်နေသည်","up",2500)}
-      const mm=url.match(/\/api\/job\/([a-z0-9]+)/);
+      const r=await FETCH0(u,o);
+      if(down){down=false;nb("✅ လိုင်းပြန်ရပါပြီ – ရပ်သွားတဲ့နေရာကနေ အလိုအလျောက် ဆက်လုပ်နေပါတယ်","up",3500)}
+      if(onApi){
+        if(r.headers.get("X-Offline")){offl=true;nb("🔴 Server ဘက်က လိုင်းပျက်နေပါသည် – လိုင်းရရင် ဆက်လုပ်ပါမယ်","dn")}
+        else if(offl){offl=false;nb("✅ ပြန်ရပါပြီ – ဆက်လုပ်နေပါတယ်","up",3500)}}
+      const mm=u.match(/\/api\/job\/([a-z0-9]+)/);
       if(mm&&localStorage.ox_job==mm[1])r.clone().json().then(j=>{if(j.status=="done"||j.status=="error")localStorage.removeItem("ox_job")}).catch(()=>{});
       return r}
     catch(e){
-      if(!retry||n>=600)throw e;
-      if(!down){down=true;nb("🔴 ချိတ်ဆက်မှု ပြတ်နေသည် – ပြန်ချိတ်နေသည်... (Video ထုတ်တာ Termux မှာ ဆက်လုပ်နေပါတယ်)","dn")}
-      await new Promise(r=>setTimeout(r,3000));
-      if(n%3==2){await refreshApi();if(A!==base){url=url.replace(base,A);base=A}}
-    }}};
+      if(!retry||n>=1200)throw e;
+      if(!down){down=true;nb("🔴 လိုင်းပျက်သွားပါသည် – လိုင်းရရင် ပြန်စပါမယ် (ထုတ်နေတာ ရပ်မသွားပါ)","dn")}
+      await new Promise(r=>setTimeout(r,3000))}}};
 
 const F=async(p,o)=>{o=o||{};o.headers=Object.assign({"X-Token":tok},o.headers||{});const r=await fetch(A+p,o);if(r.status==401&&tok){tok="";localStorage.removeItem("ox_tok");$("lg").classList.add("on")}return r};
 const P=(p,b)=>F(p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});
 window.OX={API:A,f:F,post:P,esc,u:p=>A+p+(p.includes("?")?"&":"?")+"k="+tok,me:()=>ME,refresh:()=>loadMe(),go:p=>show(p)};
-async function ping(){try{const c=new AbortController();setTimeout(()=>c.abort(),4000);await fetch(A+"/",{signal:c.signal});$("net").className="net ok";$("net").textContent="🟢 Online"}catch(e){$("net").className="net er";$("net").textContent="🔴 Network Error";refreshApi()}}
+
+async function ping(){
+  if(!A&&GHP){$("net").className="net er";$("net").textContent="🔴 Server မချိတ်ရသေးပါ";nb("Termux မှာ ပေါ်တဲ့ Website link (#api= ပါတာ) ကို တစ်ခါဖွင့်ပါ","dn");return}
+  try{const c=new AbortController();setTimeout(()=>c.abort(),5000);
+    const t=await (await fetch(A+"/",{signal:c.signal})).text();if(t.indexOf("Running website")<0)throw 0;
+    $("net").className="net ok";$("net").textContent="🟢 Online";
+    if(!down&&!offl&&$("nb").textContent.indexOf("Termux မှာ")==0)$("nb").style.display="none"}
+  catch(e){$("net").className="net er";$("net").textContent="🔴 Network Error"}}
 ping();setInterval(ping,5000);
 
 /* login */
@@ -171,7 +175,7 @@ async function aj(){
     const r=await F("/api/job/"+id);if(!r.ok){box.style.display="none";return}
     const j=await r.json();let h="";
     if(j.status=="running")h='<h2>⏳ ထုတ်နေတဲ့ video ရှိပါတယ် – '+pc(j.steps)+'%</h2>'+bar(pc(j.steps))+stepsHtml(j.steps);
-    else if(j.status=="wait")h='<h2>✋ ဘာသာပြန်စာ ထည့်ရမယ့် အဆင့်မှာ ရပ်ထားသည်</h2><div class="wn">ဒီအဆင့်ကို page ပြန်ဖွင့်ရင် ပြန်မပြနိုင်ပါ။ အောက်က Recap မှာ ပြန်စပါ (credit မကုန်သေးပါ)</div>';
+    else if(j.status=="wait")h='<h2>✋ ဘာသာပြန်စာ ထည့်ရမယ့် အဆင့်မှာ ရပ်ထားသည်</h2><div class="wn">အောက်က Recap မှာ ပြန်စပါ (credit မကုန်သေးပါ)</div>';
     else if(j.status=="done")h='<h2>✅ Video ပြီးပါပြီ</h2><button id="ajh">📜 History မှာ ကြည့်မည်</button>';
     else if(j.steps&&j.steps.length)h='<h2 class="er">❌ မအောင်မြင်ပါ</h2><div class="er">'+esc(j.error||"")+"</div>"+stepsHtml(j.steps);
     else{box.style.display="none";localStorage.removeItem("ox_job");return}
