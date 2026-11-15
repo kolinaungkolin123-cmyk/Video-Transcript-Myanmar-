@@ -47,7 +47,7 @@ const HTML=`
  <div id="bbox"><div class="hd" id="bh" style="background:#ff5252"></div></div>
  <div id="cbox"><div class="hd" id="ch" style="background:#ffd600"></div></div>
  <div id="ssample">စာတန်းနမူနာ</div><div id="wms">Watermark</div></div>
-<video id="vplay" playsinline preload="auto" style="position:absolute;width:2px;height:2px;opacity:.01;pointer-events:none;margin:0"></video>
+<video id="vplay" playsinline preload="metadata" style="position:absolute;width:2px;height:2px;opacity:.01;pointer-events:none;margin:0"></video>
 <div class="row" style="margin-top:8px"><button class="sec" id="pp" style="width:56px;padding:8px">▶</button>
  <input type="range" id="seek" min="0" max="1000" value="0" style="flex:1"><span id="ptime" class="wn" style="white-space:nowrap">0:00</span></div>
 <div id="vlen" class="wn" style="margin:6px 0">စုစုပေါင်း -</div>
@@ -139,10 +139,11 @@ const HTML=`
 <textarea id="tr" placeholder="1 | 0:00.2 | မြန်မာစာ..."></textarea>
 <button class="sec" id="ck">✔ စစ်ဆေးမည်</button>
 <div id="chk"></div>
-<button id="ct">ဆက်သွား ▶</button></div>
+<button id="ct">ဆက်သွား ▶</button>
+<div id="steps2" style="margin-top:12px"></div></div>
 
 <div class="card" id="oc" style="display:none"><h2>ရလဒ်</h2>
-<video id="ov" controls></video><a class="btn" id="dl">⬇ MP4 ဒေါင်းလုဒ်</a></div>
+<video id="ov" controls preload="metadata"></video><a class="btn" id="dl">⬇ MP4 ဒေါင်းလုဒ်</a></div>
 <canvas id="cv" style="display:none"></canvas>`;
 
 window.Recap={init(root){
@@ -152,7 +153,7 @@ if(!document.getElementById("rcss")){
 root.innerHTML=HTML;
 const $=i=>document.getElementById(i),clamp=(v,a,b)=>Math.min(b,Math.max(a,v)),sleep=ms=>new Promise(r=>setTimeout(r,ms)),post=OX.post,esc=OX.esc;
 const MAXS=900;
-let JID=null,SRCID=null,mode="recap",size="9:16",Q=720,SUB={by:0,bh:2},WMB={by:0,bh:2},DUR=0,until=0,RUN=0,raf=0,sk=false;
+let JID=null,SRCID=null,mode="recap",size="9:16",Q=720,SUB={by:0,bh:2},WMB={by:0,bh:2},DUR=0,until=0,RUN=0,raf=0,sk=false,OUT="steps";
 const B={x:.08,y:.78,w:.84,h:.14},SB={x:.5,y:.86},WM={x:.82,y:.07},CR={x:.1,y:.1,w:.8,h:.8};
 const FONTS=[["Noto Sans – Bold","'Noto Sans Myanmar'",700],["Noto Sans – Regular","'Noto Sans Myanmar'",400],["Noto Serif – Bold","'Noto Serif Myanmar'",700],["Padauk – Bold","'Padauk'",700],["Padauk – Regular","'Padauk'",400]];
 FONTS.forEach((f,i)=>{const o=document.createElement("option");o.value=i;o.textContent=f[0];$("fsel").appendChild(o)});
@@ -321,18 +322,18 @@ function draw(steps){const full=steps.length==6;let tot=0,ws=0;
     }else{delete TM[k];ic={ok:"✅",err:"❌",pause:"✋",wait:"⚪"}[s.s]||"⚪"}
     const pt=(s.s=="run"&&p!=null)?" — <b>"+p+"%</b>":(s.s=="ok"?" — <b>100%</b>":"");
     return '<div class="st">'+ic+" "+esc(s.n)+pt+extra+(s.m?"<small>"+esc(s.m)+"</small>":"")+bar+"</div>"}).join("");
-  $("steps").innerHTML=h}
-function showNJ(){$("nj").style.display="block";$("njh").style.display="block"}
+  $(OUT).innerHTML=h}
+function showNJ(){const host=OUT=="steps2"?$("tx"):$("steps").parentElement;host.appendChild($("nj"));host.appendChild($("njh"));$("nj").style.display="block";$("njh").style.display="block"}
 
 async function poll(tk,id){let fails=0;
   while(tk==RUN){let j;
     try{j=await (await OX.f("/api/job/"+id)).json();fails=0}
-    catch(e){fails++;if(fails>=8){if(tk==RUN)draw([{s:"err",n:"Network Error",m:"Server ချိတ်မရတော့ပါ – နောက်မှ ပြန်စမ်းပါ"}]);return}await sleep(2000);continue}
+    catch(e){fails++;if(fails>=3){if(tk==RUN)draw([{s:"err",n:"Network Error",m:"Server ချိတ်မရတော့ပါ – Termux link ပြောင်းသွားနိုင်ပါတယ်"}]);return}await sleep(2000);continue}
     if(tk!=RUN)return;
     draw(j.steps||[]);
     if(j.status=="wait"){if($("tx").style.display=="none"){$("src").value=j.text;$("tx").style.display="block";$("tx").scrollIntoView()}return}
     if(j.status=="done"){$("ov").src=OX.u("/api/video/"+id);$("dl").href=OX.u("/api/video/"+id+"?dl=1");$("oc").style.display="block";$("oc").scrollIntoView();showNJ();OX.refresh().then(showQ);return}
-    if(j.status=="error"){alert("❌ "+j.error);showNJ();OX.refresh().then(showQ);return}
+    if(j.status=="error"){showNJ();OX.refresh().then(showQ);return}
     await sleep(1000)}}
 
 $("go").onclick=async()=>{
@@ -341,7 +342,8 @@ $("go").onclick=async()=>{
   if(me&&!me.hasKey){alert("AssemblyAI API key မသိမ်းရသေးပါ – Menu → Account မှာ သိမ်းပါ");OX.go("account");return}
   if(me&&me.free<1&&me.vids<1){alert("Video ထုတ်ခွင့် မကျန်တော့ပါ – Package ဝယ်ပါ");OX.go("package");return}
   if(DUR>MAXS+5){alert("Video က ၁၅ မိနစ်ထက် ကျော်နေပါတယ် – အောက်က ✂ ဖြတ်ယူမည်နဲ့ ဖြတ်ပါ");return}
-  $("go").disabled=true;$("oc").style.display="none";$("tx").style.display="none";$("tr").value="";$("chk").innerHTML="";
+  OUT="steps";$("steps2").innerHTML="";
+  $("go").disabled=true;$("oc").style.display="none";$("tx").style.display="none";$("tr").value="";$("tr").readOnly=false;$("chk").innerHTML="";$("ck").disabled=false;$("ct").disabled=false;
   const tk=RUN;
   try{const id=await ensureId();JID=id;
     const r=await post("/api/transcribe",{id,aai:"account",mode});const j=await r.json().catch(()=>({}));
@@ -361,25 +363,27 @@ $("ck").onclick=async()=>show(await (await post("/api/check",{id:JID,text:$("tr"
 $("ct").onclick=async()=>{
   if(!$("tr").value.trim()){alert("ဘာသာပြန်စာ ထည့်ပါ");return}
   $("ct").disabled=true;const id=JID,tk=RUN;
+  OUT="steps2";$("steps").innerHTML="";$("tr").readOnly=true;
+  const back=()=>{$("ct").disabled=false;$("tr").readOnly=false;OUT="steps"};
   try{
     const c=await (await post("/api/check",{id,text:$("tr").value})).json();
-    if(!c.ok){show(c);$("ct").disabled=false;return}
+    if(!c.ok){show(c);back();return}
     if($("son").checked)await makeSubs(id);
     const wmOn=$("wmon").checked&&$("wmtext").value.trim();if(wmOn)await makeWM(id);
     const {W,H}=WH(),opts={mode,W,H,flip:$("flip").checked,bg:$("bgon").checked?+$("bgb").value:0,fx:$("fx").value,vol:+$("vol").value,
       crop:{on:$("cropon").checked,...CR},blur:{on:$("bon").checked,...B,s:+$("bs").value},sub:{on:$("son").checked,...SUB},wm:{on:!!wmOn,...WMB}};
     const r=await post("/api/continue",{id,voice:$("voice").value,voices:{},pitch:$("pitch").value,rate:$("rate").value,text:$("tr").value,opts});
     const j=await r.json().catch(()=>({}));
-    if(!r.ok){show(j);if(r.status==402){alert("Video ထုတ်ခွင့် မကျန်တော့ပါ – Package ဝယ်ပါ");OX.go("package")}}
-    else{$("chk").innerHTML="";$("tx").style.display="none";$("go").disabled=true;showNJ();await OX.refresh();showQ();await poll(tk,id)}
-  }catch(e){draw([{s:"err",n:"Network Error",m:e.message}])}
-  $("ct").disabled=false};
+    if(!r.ok){show(j);$("steps2").innerHTML="";back();if(r.status==402){alert("Video ထုတ်ခွင့် မကျန်တော့ပါ – Package ဝယ်ပါ");OX.go("package")}}
+    else{$("chk").innerHTML="";$("ck").disabled=true;$("go").disabled=true;showNJ();setTimeout(()=>$("steps2").scrollIntoView({block:"center"}),150);await OX.refresh();showQ();await poll(tk,id)}
+  }catch(e){draw([{s:"err",n:"Network Error",m:e.message}]);back()}};
 
 $("nj").onclick=()=>{
-  RUN++;JID=null;SRCID=null;until=0;V.pause();V.removeAttribute("src");V.load();DUR=0;
+  RUN++;JID=null;SRCID=null;until=0;V.pause();V.removeAttribute("src");V.load();DUR=0;OUT="steps";
   $("vf").value="";$("url").value="";$("dp").style.display="none";$("tpw").style.display="none";
   ["vwc","tc","tx","oc","nj","njh"].forEach(k=>$(k).style.display="none");
-  $("steps").innerHTML="";$("tr").value="";$("chk").innerHTML="";$("src").value="";$("go").disabled=false;$("ct").disabled=false;
+  $("steps").innerHTML="";$("steps2").innerHTML="";$("tr").value="";$("tr").readOnly=false;$("chk").innerHTML="";$("src").value="";
+  $("go").disabled=false;$("ct").disabled=false;$("ck").disabled=false;
   OX.refresh().then(showQ);window.scrollTo(0,0)};
 applyUI();
 }};
