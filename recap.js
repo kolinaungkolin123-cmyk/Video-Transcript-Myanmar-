@@ -47,7 +47,7 @@ const HTML=`
  <div id="bbox"><div class="hd" id="bh" style="background:#ff5252"></div></div>
  <div id="cbox"><div class="hd" id="ch" style="background:#ffd600"></div></div>
  <div id="ssample">စာတန်းနမူနာ</div><div id="wms">Watermark</div></div>
-<video id="vplay" playsinline preload="metadata" style="position:absolute;width:2px;height:2px;opacity:.01;pointer-events:none;margin:0"></video>
+<video id="vplay" playsinline preload="auto" style="position:absolute;width:2px;height:2px;opacity:.01;pointer-events:none;margin:0"></video>
 <div class="row" style="margin-top:8px"><button class="sec" id="pp" style="width:56px;padding:8px">▶</button>
  <input type="range" id="seek" min="0" max="1000" value="0" style="flex:1"><span id="ptime" class="wn" style="white-space:nowrap">0:00</span></div>
 <div id="vlen" class="wn" style="margin:6px 0">စုစုပေါင်း -</div>
@@ -143,7 +143,7 @@ const HTML=`
 <div id="steps2" style="margin-top:12px"></div></div>
 
 <div class="card" id="oc" style="display:none"><h2>ရလဒ်</h2>
-<video id="ov" controls preload="metadata"></video><a class="btn" id="dl">⬇ MP4 ဒေါင်းလုဒ်</a></div>
+<video id="ov" controls></video><a class="btn" id="dl">⬇ MP4 ဒေါင်းလုဒ်</a></div>
 <canvas id="cv" style="display:none"></canvas>`;
 
 window.Recap={init(root){
@@ -375,7 +375,7 @@ $("ct").onclick=async()=>{
     const r=await post("/api/continue",{id,voice:$("voice").value,voices:{},pitch:$("pitch").value,rate:$("rate").value,text:$("tr").value,opts});
     const j=await r.json().catch(()=>({}));
     if(!r.ok){show(j);$("steps2").innerHTML="";back();if(r.status==402){alert("Video ထုတ်ခွင့် မကျန်တော့ပါ – Package ဝယ်ပါ");OX.go("package")}}
-    else{$("chk").innerHTML="";$("ck").disabled=true;$("go").disabled=true;showNJ();setTimeout(()=>$("steps2").scrollIntoView({block:"center"}),150);await OX.refresh();showQ();await poll(tk,id)}
+    else{$("chk").innerHTML="";$("ck").disabled=true;$("go").disabled=true;showNJ();await OX.refresh();showQ();await poll(tk,id)}
   }catch(e){draw([{s:"err",n:"Network Error",m:e.message}]);back()}};
 
 $("nj").onclick=()=>{
