@@ -13,6 +13,9 @@ video,audio{width:100%;margin-top:8px;border-radius:12px}
 .pb{height:10px;background:var(--bd);border-radius:6px;overflow:hidden;margin-top:8px}.pb i{display:block;height:100%;width:0;background:var(--pri);transition:width .3s}
 .seg{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}.seg button{margin:0;flex:1;min-width:64px;background:transparent;color:var(--tx);border:1px solid var(--bd)}
 .seg button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.cpre{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:8px}
+.cpre button{margin:0;background:transparent;color:var(--tx);border:1px solid var(--bd)}
+.cpre button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
 .chk{display:flex;align-items:center;margin:8px 0;font-weight:600}.chk label{color:var(--tx);font-size:.95rem}
 .st{padding:8px 0;border-bottom:1px solid var(--bd)}.st small{display:block;color:var(--mut)}
 #chk div{font-size:.9rem;margin-top:4px}
@@ -21,7 +24,7 @@ video,audio{width:100%;margin-top:8px;border-radius:12px}
 #bbox{position:absolute;border:2px dashed #ff5252;touch-action:none;cursor:move}
 #cbox{position:absolute;border:2px solid #ffd600;box-shadow:0 0 0 999px rgba(0,0,0,.55);touch-action:none;cursor:move;display:none}
 .hd{position:absolute;right:-2px;bottom:-2px;width:26px;height:26px;border-radius:6px 0 6px 0;touch-action:none}
-#ssample,#wms{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;touch-action:none;cursor:move;padding:2px 6px;border:1px dashed rgba(255,255,255,.7);text-shadow:-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,2px 2px 0 #000}
+#ssample,#wms{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;touch-action:none;cursor:move;padding:2px 6px;border:1px dashed rgba(255,255,255,.7);text-shadow:-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,2px 2px 0 #000;text-align:center}
 .sw{display:flex;gap:8px;margin:4px 0 8px}.sw button{margin:0;width:42px;height:34px;border:2px solid var(--bd)}
 .pn{display:none}.pn.on{display:block}
 .sp{display:inline-block;width:14px;height:14px;border:2px solid var(--bd);border-top-color:var(--pri);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px}
@@ -39,7 +42,7 @@ const HTML=`
 <div class="row"><input id="url" placeholder="TikTok / YouTube link ထည့်ပါ">
  <button class="sec" id="pst">📋 Paste</button><button class="dk" id="dlb">⬇ ဒေါင်းမည်</button></div>
 <div id="dp" style="display:none"><div class="pb"><i id="pbar"></i></div><div id="ptx" class="wn" style="margin-top:4px"></div></div>
-<label style="display:block;margin-top:8px">Link ရနိုင်သည်: YouTube · TikTok</label></div>
+<label style="display:block;margin-top:8px">Link ရနိုင်သည်: YouTube · TikTok (720p အထိ ဒေါင်းမည်)</label></div>
 
 <div class="card" id="vwc" style="display:none">
 <h2>🎞 Video</h2>
@@ -65,7 +68,7 @@ const HTML=`
 </div>
 
 <div class="card" id="tc" style="display:none">
-<div class="tabs" id="tabs"><button class="on" data-t="0">ဗီဒီယို</button><button data-t="1">Blur</button><button data-t="2">စာတန်း</button><button data-t="3">အသံ</button></div>
+<div class="tabs" id="tabs"><button class="on" data-t="0">ဗီဒီယို</button><button data-t="1">Blur</button><button data-t="2">စာတန်း</button><button data-t="3">အရောင်</button><button data-t="4">အသံ</button></div>
 
 <div class="pn on" id="p0">
  <label>Recap / Dubbing</label>
@@ -90,13 +93,15 @@ const HTML=`
 
 <div class="pn" id="p2">
  <div class="chk"><input type="checkbox" id="son" checked><label for="son">မြန်မာစာတန်း ထိုးမည် (အပေါ်က စာကို ရွှေ့ချိန်ပါ)</label></div>
+ <label>စာတန်းပုံစံ</label>
+ <div class="seg" id="gln"><button class="on" data-v="1">1 Line</button><button data-v="2">2 Line</button></div>
+ <label>တစ်ကြောင်းကို စာလုံးရေ (1 Line ≈ 5 လုံး၊ 2 Line ≈ 10 လုံး ဝန်းကျင်)</label>
+ <input type="number" id="maxc" min="3" max="12" value="5">
  <label>အရောင်</label><div class="sw" id="sw"></div>
  <input type="color" id="scol" value="#ffffff">
  <label>Font</label><select id="fsel"></select>
  <label>စာအရွယ်အစား: <b id="fsv">6</b>%</label>
  <input type="range" id="fsz" min="3" max="14" step="0.5" value="6">
- <label>တစ်ခါပြ အများဆုံး စာလုံးရေ (လုံး)</label>
- <input type="number" id="maxc" min="2" max="20" value="6">
  <hr style="border:0;border-top:1px solid var(--bd);margin:12px 0">
  <div class="chk"><input type="checkbox" id="wmon"><label for="wmon">Watermark ထည့်မည် (စာကို ရွှေ့ချိန်ပါ)</label></div>
  <input id="wmtext" value="@MyChannel">
@@ -109,6 +114,20 @@ const HTML=`
 </div>
 
 <div class="pn" id="p3">
+ <label>အရောင် ချိန်ပြီးသား ၁၀ မျိုး (နှိပ်ရုံပဲ)</label>
+ <div class="cpre" id="cpre"></div>
+ <label>လင်းမှု: <b id="cbv">0</b></label>
+ <input type="range" id="cb" min="-30" max="30" value="0">
+ <label>Contrast: <b id="ccv">100</b>%</label>
+ <input type="range" id="cc" min="70" max="140" value="100">
+ <label>အရောင်စွဲ (Saturation): <b id="csv">100</b>%</label>
+ <input type="range" id="cs" min="0" max="160" value="100">
+ <label>အေး ⟷ အပူ: <b id="cwv">0</b></label>
+ <input type="range" id="cw" min="-50" max="50" value="0">
+ <button class="sec" id="crs">↩ မူရင်းအရောင်</button>
+</div>
+
+<div class="pn" id="p4">
  <label>အသံရွေး</label>
  <select id="voice">
   <optgroup label="ယောက်ျား"><option value="thiha">Thiha – လူငယ်</option><option value="minmin">Min Min – လူလတ်</option><option value="zawgyi">Zaw Gyi – လူကြီး</option></optgroup>
@@ -126,7 +145,9 @@ const HTML=`
 </div>
 </div>
 
-<div class="card"><button id="go" style="margin:0">စတင်မည်</button>
+<div class="card">
+<div class="chk"><input type="checkbox" id="hk" checked><label for="hk">🎣 အစ ၃ စက္ကန့် Hook ထည့်မည် (Gemini key ရှိမှ အလုပ်လုပ်သည်)</label></div>
+<button id="go" style="margin:0">စတင်မည်</button>
 <h2 style="margin-top:12px">လုပ်ဆောင်ချက်</h2><div id="steps"></div>
 <button class="sec" id="nj" style="display:none">➕ Video အသစ်ထုတ်မည်</button>
 <small id="njh" class="wn" style="display:none">အရင်ထုတ်နေတာ ဆက်အလုပ်လုပ်နေပါမယ် – Menu → History မှာ ကြည့်လို့ရပါတယ်</small></div>
@@ -153,24 +174,34 @@ if(!document.getElementById("rcss")){
 root.innerHTML=HTML;
 const $=i=>document.getElementById(i),clamp=(v,a,b)=>Math.min(b,Math.max(a,v)),sleep=ms=>new Promise(r=>setTimeout(r,ms)),post=OX.post,esc=OX.esc;
 const MAXS=900;
-let JID=null,SRCID=null,mode="recap",size="9:16",Q=720,SUB={by:0,bh:2},WMB={by:0,bh:2},DUR=0,until=0,RUN=0,raf=0,sk=false,OUT="steps";
+let JID=null,SRCID=null,mode="recap",size="9:16",Q=720,LN=1,SUB={by:0,bh:2},WMB={by:0,bh:2},DUR=0,until=0,RUN=0,raf=0,sk=false,OUT="steps";
 const B={x:.08,y:.78,w:.84,h:.14},SB={x:.5,y:.86},WM={x:.82,y:.07},CR={x:.1,y:.1,w:.8,h:.8};
 const FONTS=[["Noto Sans – Bold","'Noto Sans Myanmar'",700],["Noto Sans – Regular","'Noto Sans Myanmar'",400],["Noto Serif – Bold","'Noto Serif Myanmar'",700],["Padauk – Bold","'Padauk'",700],["Padauk – Regular","'Padauk'",400]];
 FONTS.forEach((f,i)=>{const o=document.createElement("option");o.value=i;o.textContent=f[0];$("fsel").appendChild(o)});
 const V=$("vplay");
 
+/* အရောင် preset ၁၀ မျိုး: [နာမည်, လင်းမှု, contrast, saturation, အပူအေး] */
+const PRE=[["ပုံမှန်",0,100,100,0],["အပူ",3,105,112,35],["အေးမြ",0,105,105,-35],["ကြည်လင်",3,115,135,5],["Cinematic",-4,118,92,-12],["နူးညံ့",6,92,95,10],["အဖြူအမည်း",0,112,0,0],["Vintage",0,95,70,28],["မှောင်",-15,115,100,0],["လင်းလက်",12,100,112,5]];
+function setCol(a){["cb","cc","cs","cw"].forEach((k,i)=>$(k).value=a[i])}
+function colOn(){return !!(+$("cb").value||+$("cc").value!=100||+$("cs").value!=100||+$("cw").value)}
+PRE.forEach((p,i)=>{const b=document.createElement("button");b.textContent=p[0];
+  b.onclick=()=>{setCol(p.slice(1));[...$("cpre").children].forEach((x,k)=>x.classList.toggle("on",k==i));layout()};$("cpre").appendChild(b)});
+["cb","cc","cs","cw"].forEach(k=>$(k).addEventListener("input",()=>{[...$("cpre").children].forEach(x=>x.classList.remove("on"))}));
+$("crs").onclick=()=>{setCol([0,100,100,0]);[...$("cpre").children].forEach(x=>x.classList.remove("on"));layout()};
+
 function showQ(){const m=OX.me();if(!m)return;
-  $("qinfo").innerHTML="🎞 ထုတ်ခွင့်ကျန်: အခမဲ့ <b>"+m.free+"</b> ပုဒ် · Package <b>"+m.vids+"</b> ပုဒ် <span class=\"wn\">(တစ်ပုဒ် အများဆုံး "+m.max+" မိနစ်)</span>"}
+  $("qinfo").innerHTML="🎞 ထုတ်ခွင့်ကျန်: အခမဲ့ <b>"+m.free+"</b> ပုဒ် · Package <b>"+m.vids+"</b> ပုဒ် <span class=\"wn\">(တစ်ပုဒ် အများဆုံး "+m.max+" မိနစ်)</span>"+
+   '<div style="margin-top:4px">'+(m.hasGem?"✅ Gemini ဘာသာပြန် အလိုအလျောက်":'<span class="wn">⚠ Gemini key မထည့်ရသေးပါ (Menu → Account) – ဘာသာပြန်စာကို ကိုယ်တိုင်ထည့်ရမည်</span>')+"</div>"}
 OX.refresh().then(showQ);
 
 const editCrop=()=>$("cropon").checked&&$("p0").classList.contains("on");
 $("tabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;
   [...$("tabs").children].forEach(x=>x.classList.toggle("on",x===b));
-  for(let i=0;i<4;i++)$("p"+i).classList.toggle("on",i==b.dataset.t);layout()};
+  for(let i=0;i<5;i++)$("p"+i).classList.toggle("on",i==b.dataset.t);layout()};
 function grp(id,cb){const el=$(id);el.onclick=e=>{const b=e.target.closest("button");if(!b)return;
   [...el.children].forEach(x=>x.classList.remove("on"));b.classList.add("on");cb(b.dataset.v)}}
 grp("gmode",v=>{mode=v;$("mhint").textContent=v=="dub"?"Dubbing = လူ ၂ ယောက်နှင့်အထက် အပြန်အလှန်စကားပြောတဲ့ video – စကားပြောတဲ့ အချိန်ကို မူရင်းနဲ့ ကိုက်အောင် ညှိပေးမယ် (အသံတစ်မျိုးတည်း သုံးမယ်)":"Recap = လူတစ်ယောက်တည်း ပြောတဲ့ video"});
-grp("gsize",v=>{size=v;layout()});grp("gq",v=>{Q=+v});
+grp("gsize",v=>{size=v;layout()});grp("gq",v=>{Q=+v});grp("gln",v=>{LN=+v;layout()});
 function WH(){const e=n=>Math.round(n/2)*2;
   if(size=="9:16")return{W:e(Q),H:e(Q*16/9)};if(size=="3:4")return{W:e(Q),H:e(Q*4/3)};
   if(size=="16:9")return{W:e(Q*16/9),H:e(Q)};return{W:e(Q),H:e(Q)}}
@@ -181,11 +212,13 @@ function applyUI(){
   bx($("bbox"),B.x,B.y,B.w,B.h);$("bbox").style.display=(!ec&&$("bon").checked)?"block":"none";
   $("bbox").style.backdropFilter=$("bbox").style.webkitBackdropFilter="blur("+Math.max(2,$("bs").value/4)+"px)";
   const s=$("ssample");s.style.left=SB.x*100+"%";s.style.top=SB.y*100+"%";s.style.display=(!ec&&$("son").checked)?"block":"none";
+  s.style.whiteSpace="pre";s.textContent=LN==2?"စာတန်းနမူနာ\nနှစ်ကြောင်း":"စာတန်းနမူနာ";
   s.style.color=$("scol").value;s.style.fontFamily=f[1]+",sans-serif";s.style.fontWeight=f[2];s.style.fontSize=$("fsz").value/100*H+"px";
   const w=$("wms");w.textContent=$("wmtext").value||"Watermark";w.style.left=WM.x*100+"%";w.style.top=WM.y*100+"%";
   w.style.display=(!ec&&$("wmon").checked)?"block":"none";w.style.color="#fff";w.style.fontFamily=f[1]+",sans-serif";w.style.fontWeight=f[2];w.style.fontSize=$("wsz").value/100*H+"px";
   $("cbox").style.display=ec?"block":"none";bx($("cbox"),CR.x,CR.y,CR.w,CR.h);
   $("bsv").textContent=$("bs").value;$("bgv").textContent=$("bgb").value;$("fsv").textContent=$("fsz").value;$("wsv").textContent=$("wsz").value;
+  $("cbv").textContent=$("cb").value;$("ccv").textContent=$("cc").value;$("csv").textContent=$("cs").value;$("cwv").textContent=$("cw").value;
   $("pv").textContent=$("pitch").value;$("rv").textContent=$("rate").value;$("vv").textContent=$("vol").value}
 function redraw(){
   if(!V.videoWidth)return;
@@ -196,12 +229,15 @@ function redraw(){
     g.drawImage(V,0,0,cw,ch);return}
   const {W,H}=WH(),k=720/Math.max(W,H),cw=Math.round(W*k),ch=Math.round(H*k),C=$("cropon").checked?CR:{x:0,y:0,w:1,h:1};
   if(c.width!=cw||c.height!=ch){c.width=cw;c.height=ch}
+  const cf=colOn()?"brightness("+(1+(+$("cb").value)/100)+") contrast("+((+$("cc").value)/100)+") saturate("+((+$("cs").value)/100)+")":"";
   const sx=C.x*vw,sy=C.y*vh,sw=C.w*vw,sh=C.h*vh;
   g.save();g.fillStyle="#000";g.fillRect(0,0,cw,ch);
   if($("flip").checked){g.translate(cw,0);g.scale(-1,1)}
-  if($("bgon").checked){const s=Math.max(cw/sw,ch/sh);g.filter="blur("+($("bgb").value*cw/540)+"px)";
+  if($("bgon").checked){const s=Math.max(cw/sw,ch/sh);g.filter="blur("+($("bgb").value*cw/540)+"px) "+cf;
     g.drawImage(V,sx,sy,sw,sh,(cw-sw*s)/2,(ch-sh*s)/2,sw*s,sh*s);g.filter="none"}
-  const s2=Math.min(cw/sw,ch/sh);g.drawImage(V,sx,sy,sw,sh,(cw-sw*s2)/2,(ch-sh*s2)/2,sw*s2,sh*s2);g.restore()}
+  const s2=Math.min(cw/sw,ch/sh);g.filter=cf||"none";g.drawImage(V,sx,sy,sw,sh,(cw-sw*s2)/2,(ch-sh*s2)/2,sw*s2,sh*s2);g.filter="none";g.restore();
+  const wv=+$("cw").value;
+  if(Math.abs(wv)>1){g.save();g.globalCompositeOperation="overlay";g.fillStyle=wv>0?"rgb(255,140,40)":"rgb(40,140,255)";g.globalAlpha=Math.min(.35,Math.abs(wv)/100*.7);g.fillRect(0,0,cw,ch);g.restore()}}
 function layout(){
   let asp;if(editCrop()&&V.videoWidth)asp=V.videoWidth/V.videoHeight;else{const {W,H}=WH();asp=W/H}
   const st=$("stage");st.style.aspectRatio=asp;st.style.width="min(100%,"+(60*asp)+"vh)";applyUI();redraw()}
@@ -216,7 +252,7 @@ drag($("ssample"),()=>({...SB}),(s,dx,dy)=>{SB.x=clamp(s.x+dx,0,1);SB.y=clamp(s.
 drag($("wms"),()=>({...WM}),(s,dx,dy)=>{WM.x=clamp(s.x+dx,0,1);WM.y=clamp(s.y+dy,0,1)});
 drag($("cbox"),()=>({...CR}),(s,dx,dy)=>{CR.x=clamp(s.x+dx,0,1-CR.w);CR.y=clamp(s.y+dy,0,1-CR.h)});
 drag($("ch"),()=>({...CR}),(s,dx,dy)=>{CR.w=clamp(s.w+dx,.1,1-CR.x);CR.h=clamp(s.h+dy,.1,1-CR.y)});
-["bon","bs","bgon","bgb","flip","son","scol","fsel","fsz","wmon","wmtext","wsz","cropon","pitch","rate","vol"].forEach(k=>{
+["bon","bs","bgon","bgb","flip","son","scol","fsel","fsz","wmon","wmtext","wsz","cropon","pitch","rate","vol","cb","cc","cs","cw"].forEach(k=>{
   $(k).addEventListener("input",layout);$(k).addEventListener("change",layout)});
 ["#ffffff","#ffe600","#00e5ff","#76ff03","#ff5252","#ff9100"].forEach(c=>{
   const b=document.createElement("button");b.style.background=c;b.onclick=()=>{$("scol").value=c;applyUI()};$("sw").appendChild(b)});
@@ -291,21 +327,29 @@ $("prev").onclick=async()=>{$("pmsg").textContent="";$("prev").disabled=true;
   }catch(e){$("pmsg").textContent="❌ "+e.message}
   $("prev").disabled=false};
 
-function chunks(text,n){const out=[];text.split(/(?<=[၊။,.!?])/).forEach(part=>{
-  const t=part.replace(/(?<!\u1039)([\u1000-\u1021\u1025-\u1029\u103F\u1040-\u1049\u104C-\u104F])(?![\u103A\u1039])/g,"|$1").split("|").filter(Boolean);
-  for(let i=0;i<t.length;i+=n){const s=t.slice(i,i+n).join("").trim();if(s)out.push(s)}});return out}
-function band(yc,fs,H){const bh=Math.min(H,Math.round(fs*2.6/2)*2),by=clamp(Math.round(yc-bh/2),0,H-bh);return{by,bh}}
+/* စာတန်း: 1 Line / 2 Line */
+const SYL=/(?<!\u1039)([\u1000-\u1021\u1025-\u1029\u103F\u1040-\u1049\u104C-\u104F])(?![\u103A\u1039])/g;
+function chunks(text,n,ln){const out=[];
+  text.split(/(?<=[၊။,.!?])/).forEach(part=>{
+    const t=part.replace(SYL,"|$1").split("|").filter(Boolean),m=n*ln;
+    for(let i=0;i<t.length;i+=m){const c=t.slice(i,i+m);
+      if(ln==2&&c.length>n){const h=Math.ceil(c.length/2);const s=c.slice(0,h).join("").trim()+"\n"+c.slice(h).join("").trim();out.push(s)}
+      else{const s=c.join("").trim();if(s)out.push(s)}}});
+  return out}
+function band(yc,fs,H,ln){const bh=Math.min(H,Math.round(fs*(ln==2?3.9:2.6)/2)*2),by=clamp(Math.round(yc-bh/2),0,H-bh);return{by,bh}}
 function renderPNG(txt,cw,ch,px,py,fs,color,alpha){const f=FONTS[$("fsel").value],c=$("cv");c.width=cw;c.height=ch;const x=c.getContext("2d");x.clearRect(0,0,cw,ch);
   x.font=f[2]+" "+fs+"px "+f[1]+",sans-serif";x.globalAlpha=alpha;x.textAlign="center";x.textBaseline="middle";x.lineJoin="round";x.lineWidth=fs*.2;x.strokeStyle="#000";
-  x.strokeText(txt,px,py);x.fillStyle=color;x.fillText(txt,px,py);return c.toDataURL("image/png")}
+  const L=txt.split("\n"),lh=fs*1.18,y0=py-(L.length-1)*lh/2;
+  L.forEach((t,i)=>x.strokeText(t,px,y0+i*lh));x.fillStyle=color;L.forEach((t,i)=>x.fillText(t,px,y0+i*lh));return c.toDataURL("image/png")}
 async function loadFont(){const f=FONTS[$("fsel").value];await document.fonts.load(f[2]+" 40px "+f[1],"မြန်မာကခ");await document.fonts.ready}
-async function makeSubs(id){const {W,H}=WH(),n=Math.max(1,+$("maxc").value||6),map={};const fs=$("fsz").value/100*H;SUB=band(SB.y*H,fs,H);
+async function makeSubs(id,hk){const {W,H}=WH(),n=Math.max(1,+$("maxc").value||5),map={};const fs=$("fsz").value/100*H;SUB=band(SB.y*H,fs,H,LN);
   $("tr").value.split("\n").forEach(l=>{const m=l.match(/^[^\d]*?(\d+)\s*[|｜]\s*[\d:.]+\s*[|｜]\s*(.*\S)\s*$/);if(m&&!map[m[1]])map[m[1]]=m[2].trim()});
   const ks=Object.keys(map).map(Number).sort((a,b)=>a-b);await loadFont();
+  const mk=t=>chunks(t,n,LN).map(s=>({w:s.replace("\n","").length,png:renderPNG(s,W,SUB.bh,SB.x*W,SB.y*H-SUB.by,fs,$("scol").value,1)}));
   for(let i=0;i<ks.length;i++){draw([{s:"run",n:"စာတန်းပုံ ဆွဲနေသည်",m:(i+1)+"/"+ks.length}]);
-    const parts=chunks(map[ks[i]],n).map(t=>({w:t.length,png:renderPNG(t,W,SUB.bh,SB.x*W,SB.y*H-SUB.by,fs,$("scol").value,1)}));
-    if(parts.length)await post("/api/subs",{id,seg:ks[i]-1,parts})}}
-async function makeWM(id){const {W,H}=WH();await loadFont();const fs=$("wsz").value/100*H;WMB=band(WM.y*H,fs,H);
+    const parts=mk(map[ks[i]]);if(parts.length)await post("/api/subs",{id,seg:ks[i]-1,parts})}
+  if(hk&&hk.text){const parts=mk(hk.text);if(parts.length)await post("/api/subs",{id,seg:-1,parts})}}
+async function makeWM(id){const {W,H}=WH();await loadFont();const fs=$("wsz").value/100*H;WMB=band(WM.y*H,fs,H,1);
   await post("/api/wm",{id,png:renderPNG($("wmtext").value,W,WMB.bh,WM.x*W,WM.y*H-WMB.by,fs,"#ffffff",.85)})}
 
 const WT=[5,20,5,25,25,20],TM={};
@@ -325,13 +369,19 @@ function draw(steps){const full=steps.length==6;let tot=0,ws=0;
   $(OUT).innerHTML=h}
 function showNJ(){const host=OUT=="steps2"?$("tx"):$("steps").parentElement;host.appendChild($("nj"));host.appendChild($("njh"));$("nj").style.display="block";$("njh").style.display="block"}
 
-async function poll(tk,id){let fails=0;
+async function poll(tk,id){let fails=0,wt=0;
   while(tk==RUN){let j;
     try{j=await (await OX.f("/api/job/"+id)).json();fails=0}
     catch(e){fails++;if(fails>=3){if(tk==RUN)draw([{s:"err",n:"Network Error",m:"Server ချိတ်မရတော့ပါ – Termux link ပြောင်းသွားနိုင်ပါတယ်"}]);return}await sleep(2000);continue}
     if(tk!=RUN)return;
     draw(j.steps||[]);
-    if(j.status=="wait"){if($("tx").style.display=="none"){$("src").value=j.text;$("tx").style.display="block";$("tx").scrollIntoView()}return}
+    if(j.status=="wait"){
+      const me=OX.me();
+      if(j.tr){$("src").value=j.text||"";$("tr").value=j.tr;await proceed(id,tk,j.hook);return}
+      if(!j.tr_err&&me&&me.hasGem&&wt<4){wt++;await sleep(1500);continue}
+      if($("tx").style.display=="none"){$("src").value=j.text;$("tx").style.display="block";$("tx").scrollIntoView()}
+      if(j.tr_err)$("chk").innerHTML='<div class="wn">⚠ '+esc(j.tr_err)+"</div>";
+      return}
     if(j.status=="done"){$("ov").src=OX.u("/api/video/"+id);$("dl").href=OX.u("/api/video/"+id+"?dl=1");$("oc").style.display="block";$("oc").scrollIntoView();showNJ();OX.refresh().then(showQ);return}
     if(j.status=="error"){showNJ();OX.refresh().then(showQ);return}
     await sleep(1000)}}
@@ -360,23 +410,28 @@ function show(j){let h="";
   (j.warnings||[]).slice(0,10).forEach(e=>h+='<div class="wn">⚠ '+esc(e)+"</div>");
   if(j.ok)h='<div class="ok">✅ မှန်ပါသည် ('+j.count+"/"+j.total+" ကြောင်း)</div>"+h;$("chk").innerHTML=h}
 $("ck").onclick=async()=>show(await (await post("/api/check",{id:JID,text:$("tr").value})).json());
-$("ct").onclick=async()=>{
-  if(!$("tr").value.trim()){alert("ဘာသာပြန်စာ ထည့်ပါ");return}
-  $("ct").disabled=true;const id=JID,tk=RUN;
-  OUT="steps2";$("steps").innerHTML="";$("tr").readOnly=true;
+
+async function proceed(id,tk,hook){
+  const auto=$("tx").style.display=="none";
+  OUT=auto?"steps":"steps2";if(!auto){$("steps").innerHTML="";$("tr").readOnly=true}
+  $("ct").disabled=true;
   const back=()=>{$("ct").disabled=false;$("tr").readOnly=false;OUT="steps"};
   try{
     const c=await (await post("/api/check",{id,text:$("tr").value})).json();
-    if(!c.ok){show(c);back();return}
-    if($("son").checked)await makeSubs(id);
+    if(!c.ok){$("tx").style.display="block";show(c);back();return}
+    const hk=($("hk").checked&&hook&&hook.text)?hook:null;
+    if($("son").checked)await makeSubs(id,hk);
     const wmOn=$("wmon").checked&&$("wmtext").value.trim();if(wmOn)await makeWM(id);
     const {W,H}=WH(),opts={mode,W,H,flip:$("flip").checked,bg:$("bgon").checked?+$("bgb").value:0,fx:$("fx").value,vol:+$("vol").value,
-      crop:{on:$("cropon").checked,...CR},blur:{on:$("bon").checked,...B,s:+$("bs").value},sub:{on:$("son").checked,...SUB},wm:{on:!!wmOn,...WMB}};
+      crop:{on:$("cropon").checked,...CR},blur:{on:$("bon").checked,...B,s:+$("bs").value},sub:{on:$("son").checked,...SUB},wm:{on:!!wmOn,...WMB},
+      color:{on:colOn(),b:+$("cb").value,c:+$("cc").value,s:+$("cs").value,w:+$("cw").value}};
+    if(hk)opts.hook={text:hk.text,t:hk.t};
     const r=await post("/api/continue",{id,voice:$("voice").value,voices:{},pitch:$("pitch").value,rate:$("rate").value,text:$("tr").value,opts});
     const j=await r.json().catch(()=>({}));
-    if(!r.ok){show(j);$("steps2").innerHTML="";back();if(r.status==402){alert("Video ထုတ်ခွင့် မကျန်တော့ပါ – Package ဝယ်ပါ");OX.go("package")}}
+    if(!r.ok){$("tx").style.display="block";show(j);$("steps2").innerHTML="";back();if(r.status==402){alert("Video ထုတ်ခွင့် မကျန်တော့ပါ – Package ဝယ်ပါ");OX.go("package")}}
     else{$("chk").innerHTML="";$("ck").disabled=true;$("go").disabled=true;showNJ();await OX.refresh();showQ();await poll(tk,id)}
-  }catch(e){draw([{s:"err",n:"Network Error",m:e.message}]);back()}};
+  }catch(e){draw([{s:"err",n:"Network Error",m:e.message}]);back()}}
+$("ct").onclick=()=>{if(!$("tr").value.trim()){alert("ဘာသာပြန်စာ ထည့်ပါ");return}proceed(JID,RUN,null)};
 
 $("nj").onclick=()=>{
   RUN++;JID=null;SRCID=null;until=0;V.pause();V.removeAttribute("src");V.load();DUR=0;OUT="steps";
@@ -387,4 +442,19 @@ $("nj").onclick=()=>{
   OX.refresh().then(showQ);window.scrollTo(0,0)};
 applyUI();
 }};
+
+/* Account မှာ Gemini key ကွက် ထည့်ပေး */
+(function(){const t=setInterval(()=>{
+  if(!window.OX||!document.getElementById("pg-account")||!document.getElementById("out"))return;
+  clearInterval(t);
+  const c=document.createElement("div");c.className="card";
+  c.innerHTML='<h2>✨ Google AI Studio (Gemini) API key</h2><small class="wn">ထည့်ထားရင် ဘာသာပြန်ကို Gemini က အလိုအလျောက် လုပ်ပေးမယ်၊ Hook လည်း ရေးပေးမယ်</small><input id="gkey" type="password" placeholder="AQ... key" style="margin-top:6px"><button id="gsave">Save</button><div id="gmsg" style="margin-top:6px"></div>';
+  const o=document.getElementById("out");o.parentNode.insertBefore(c,o);
+  document.getElementById("gsave").onclick=async()=>{
+    const k=document.getElementById("gkey").value.trim(),m=document.getElementById("gmsg");
+    if(!k){m.className="er";m.textContent="Key ထည့်ပါ";return}
+    try{const r=await OX.post("/api/me/gem",{key:k});m.className=r.ok?"ok":"er";m.textContent=r.ok?"✅ Save ပြီးပါပြီ":"❌ မအောင်မြင်ပါ";if(r.ok){document.getElementById("gkey").value="";OX.refresh()}}
+    catch(e){m.className="er";m.textContent="❌ Network Error"}};
+  setInterval(()=>{const m=OX.me(),g=document.getElementById("gkey");if(m&&m.hasGem&&g&&!g.value)g.placeholder="✅ Save ထားပြီး (ပြောင်းချင်မှ ထည့်ပါ)"},2000);
+},300)})();
 })();
